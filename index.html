@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Working Chatbot</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f2;
+      --ink: #17201c;
+      --muted: #64706a;
+      --panel: #ffffff;
+      --line: #dfe5dc;
+      --bot: #edf5ef;
+      --user: #1f5d50;
+      --user-text: #ffffff;
+      --accent: #d96c4f;
+      --accent-dark: #af4833;
+      --shadow: 0 18px 55px rgba(31, 55, 45, 0.16);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 18% 14%, rgba(217, 108, 79, 0.18), transparent 28rem),
+        linear-gradient(135deg, #f7f4ed 0%, #eef4f0 55%, #f8fbf7 100%);
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .app {
+      width: min(1120px, 100%);
+      height: min(820px, calc(100vh - 48px));
+      min-height: 620px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      overflow: hidden;
+      backdrop-filter: blur(18px);
+    }
+
+    aside {
+      background: #17201c;
+      color: #f8fbf7;
+      padding: 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #f29b6e, #4da08b);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      color: #17201c;
+    }
+
+    h1 {
+      font-size: 1.1rem;
+      margin: 0;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      color: rgba(248, 251, 247, 0.7);
+      font-size: 0.9rem;
+      line-height: 1.45;
+      margin: 4px 0 0;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid rgba(248, 251, 247, 0.13);
+      background: rgba(248, 251, 247, 0.06);
+      border-radius: 8px;
+      color: rgba(248, 251, 247, 0.78);
+      font-size: 0.9rem;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #5ee3a6;
+      box-shadow: 0 0 0 5px rgba(94, 227, 166, 0.12);
+      flex: 0 0 auto;
+    }
+
+    .suggestions {
+      display: grid;
+      gap: 10px;
+    }
+
+    .suggestions h2 {
+      margin: 0 0 2px;
+      font-size: 0.78rem;
+      color: rgba(248, 251, 247, 0.56);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .quick {
+      width: 100%;
+      border: 1px solid rgba(248, 251, 247, 0.13);
+      background: rgba(248, 251, 247, 0.06);
+      color: #f8fbf7;
+      text-align: left;
+      padding: 11px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font: inherit;
+      line-height: 1.25;
+      transition: background 140ms ease, border-color 140ms ease;
+    }
+
+    .quick:hover,
+    .quick:focus-visible {
+      background: rgba(248, 251, 247, 0.12);
+      border-color: rgba(248, 251, 247, 0.28);
+      outline: none;
+    }
+
+    .actions {
+      margin-top: auto;
+      display: grid;
+      gap: 10px;
+    }
+
+    .secondary {
+      border: 1px solid rgba(248, 251, 247, 0.18);
+      background: transparent;
+      color: rgba(248, 251, 247, 0.86);
+      border-radius: 8px;
+      padding: 11px 12px;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    main {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-width: 0;
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    header {
+      padding: 22px 26px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .title {
+      min-width: 0;
+    }
+
+    .title strong {
+      display: block;
+      font-size: 1rem;
+    }
+
+    .title span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-top: 4px;
+    }
+
+    .meter {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.86rem;
+      white-space: nowrap;
+    }
+
+    .messages {
+      padding: 26px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      scroll-behavior: smooth;
+    }
+
+    .message {
+      display: grid;
+      gap: 6px;
+      max-width: min(74ch, 86%);
+      animation: rise 180ms ease-out;
+    }
+
+    .message.user {
+      align-self: flex-end;
+    }
+
+    .name {
+      font-size: 0.75rem;
+      color: var(--muted);
+      padding: 0 4px;
+    }
+
+    .bubble {
+      border-radius: 8px;
+      padding: 13px 14px;
+      line-height: 1.5;
+      font-size: 0.96rem;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .bot .bubble {
+      background: var(--bot);
+      border: 1px solid #d9e8dc;
+      color: #1e2a25;
+    }
+
+    .user .bubble {
+      background: var(--user);
+      color: var(--user-text);
+    }
+
+    .typing .bubble {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      width: fit-content;
+    }
+
+    .typing-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #81918a;
+      animation: pulse 850ms infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(2) {
+      animation-delay: 110ms;
+    }
+
+    .typing-dot:nth-child(3) {
+      animation-delay: 220ms;
+    }
+
+    form {
+      padding: 18px 26px 24px;
+      border-top: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: end;
+      background: rgba(255, 255, 255, 0.86);
+    }
+
+    textarea {
+      width: 100%;
+      resize: none;
+      min-height: 52px;
+      max-height: 150px;
+      border: 1px solid #cfd8d2;
+      border-radius: 8px;
+      padding: 14px 14px;
+      font: inherit;
+      color: var(--ink);
+      line-height: 1.4;
+      outline: none;
+      background: #fff;
+    }
+
+    textarea:focus {
+      border-color: #4da08b;
+      box-shadow: 0 0 0 4px rgba(77, 160, 139, 0.12);
+    }
+
+    .send {
+      width: 54px;
+      height: 52px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: background 140ms ease, transform 140ms ease;
+    }
+
+    .send:hover,
+    .send:focus-visible {
+      background: var(--accent-dark);
+      outline: none;
+    }
+
+    .send:active {
+      transform: translateY(1px);
+    }
+
+    .send svg {
+      width: 21px;
+      height: 21px;
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 70%, 100% {
+        opacity: 0.35;
+        transform: translateY(0);
+      }
+      35% {
+        opacity: 1;
+        transform: translateY(-3px);
+      }
+    }
+
+    @media (max-width: 780px) {
+      body {
+        padding: 0;
+        background: #f6f7f2;
+      }
+
+      .app {
+        width: 100%;
+        height: 100vh;
+        min-height: 0;
+        grid-template-columns: 1fr;
+        border: 0;
+      }
+
+      aside {
+        padding: 16px;
+        gap: 12px;
+      }
+
+      .suggestions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .suggestions h2,
+      .status,
+      .actions {
+        display: none;
+      }
+
+      .quick {
+        min-height: 44px;
+        font-size: 0.86rem;
+      }
+
+      main {
+        min-height: 0;
+      }
+
+      header,
+      .messages,
+      form {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .message {
+        max-width: 96%;
+      }
+
+      .meter {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="Working chatbot">
+    <aside>
+      <div class="brand">
+        <div class="logo" aria-hidden="true">AI</div>
+        <div>
+          <h1>Working Chatbot</h1>
+          <p class="subtitle">A local helper that can chat, plan, summarize, and answer simple questions.</p>
+        </div>
+      </div>
+
+      <div class="status">
+        <span class="dot" aria-hidden="true"></span>
+        Ready in your browser
+      </div>
+
+      <section class="suggestions" aria-label="Quick prompts">
+        <h2>Try asking</h2>
+        <button class="quick" type="button">Help me plan my day</button>
+        <button class="quick" type="button">Write a short email</button>
+        <button class="quick" type="button">Give me study tips</button>
+        <button class="quick" type="button">What can you do?</button>
+      </section>
+
+      <div class="actions">
+        <button class="secondary" id="clearChat" type="button">Clear chat</button>
+      </div>
+    </aside>
+
+    <main>
+      <header>
+        <div class="title">
+          <strong>Chat</strong>
+          <span>Press Enter to send, Shift+Enter for a new line.</span>
+        </div>
+        <div class="meter" aria-label="Chat mode">
+          <span class="dot" aria-hidden="true"></span>
+          Local mode
+        </div>
+      </header>
+
+      <section class="messages" id="messages" aria-live="polite" aria-label="Conversation"></section>
+
+      <form id="chatForm">
+        <textarea id="messageInput" rows="1" placeholder="Ask me anything..." aria-label="Message"></textarea>
+        <button class="send" type="submit" aria-label="Send message" title="Send message">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 2 11 13"></path>
+            <path d="m22 2-7 20-4-9-9-4Z"></path>
+          </svg>
+        </button>
+      </form>
+    </main>
+  </div>
+
+  <script>
+    const messagesEl = document.querySelector("#messages");
+    const form = document.querySelector("#chatForm");
+    const input = document.querySelector("#messageInput");
+    const clearButton = document.querySelector("#clearChat");
+    const quickButtons = document.querySelectorAll(".quick");
+    const storageKey = "working-chatbot-history";
+
+    const starter = [
+      {
+        role: "bot",
+        text: "Hi, I am your local chatbot. I can brainstorm, draft messages, make simple plans, explain topics, and keep the conversation going right here in the browser."
+      }
+    ];
+
+    let history = loadHistory();
+    renderHistory();
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      sendMessage(input.value);
+    });
+
+    input.addEventListener("keydown", event => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        form.requestSubmit();
+      }
+    });
+
+    input.addEventListener("input", () => {
+      input.style.height = "auto";
+      input.style.height = `${Math.min(input.scrollHeight, 150)}px`;
+    });
+
+    clearButton.addEventListener("click", () => {
+      history = [...starter];
+      saveHistory();
+      renderHistory();
+      input.focus();
+    });
+
+    quickButtons.forEach(button => {
+      button.addEventListener("click", () => sendMessage(button.textContent.trim()));
+    });
+
+    function sendMessage(rawText) {
+      const text = rawText.trim();
+      if (!text) return;
+
+      addMessage("user", text);
+      input.value = "";
+      input.style.height = "auto";
+      input.focus();
+      showTyping();
+
+      window.setTimeout(() => {
+        hideTyping();
+        addMessage("bot", buildReply(text));
+      }, 420 + Math.min(text.length * 12, 900));
+    }
+
+    function addMessage(role, text) {
+      history.push({ role, text });
+      saveHistory();
+      renderMessage({ role, text });
+      scrollToBottom();
+    }
+
+    function renderHistory() {
+      messagesEl.innerHTML = "";
+      history.forEach(renderMessage);
+      scrollToBottom();
+    }
+
+    function renderMessage(message) {
+      const wrapper = document.createElement("article");
+      wrapper.className = `message ${message.role}`;
+
+      const name = document.createElement("div");
+      name.className = "name";
+      name.textContent = message.role === "user" ? "You" : "Bot";
+
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = message.text;
+
+      wrapper.append(name, bubble);
+      messagesEl.append(wrapper);
+    }
+
+    function showTyping() {
+      const wrapper = document.createElement("article");
+      wrapper.className = "message bot typing";
+      wrapper.id = "typing";
+      wrapper.innerHTML = `
+        <div class="name">Bot</div>
+        <div class="bubble" aria-label="Bot is typing">
+          <span class="typing-dot"></span>
+          <span class="typing-dot"></span>
+          <span class="typing-dot"></span>
+        </div>
+      `;
+      messagesEl.append(wrapper);
+      scrollToBottom();
+    }
+
+    function hideTyping() {
+      document.querySelector("#typing")?.remove();
+    }
+
+    function buildReply(text) {
+      const message = text.toLowerCase();
+
+      if (containsAny(message, ["hello", "hi", "hey", "namaste"])) {
+        return "Hello. Tell me what you are working on, and I will help you turn it into a clear next step.";
+      }
+
+      if (containsAny(message, ["plan", "schedule", "day", "routine"])) {
+        return "Here is a simple plan:\n\n1. Pick the one outcome that matters most.\n2. Spend 25 minutes on the first concrete action.\n3. Take a short break and remove one distraction.\n4. Do one follow-up block for polish or cleanup.\n5. End by writing tomorrow's first step.";
+      }
+
+      if (containsAny(message, ["what can you do", "help", "features", "can you do"])) {
+        return "I can draft text, make checklists, explain ideas, suggest next steps, create simple plans, and keep context from this chat. I am local, so I do not call an outside AI service, but I am fully usable for lightweight help.";
+      }
+
+      if (containsAny(message, ["email", "message", "reply", "write"])) {
+        return "Here is a clean draft:\n\nHi,\n\nThanks for reaching out. I have reviewed this and I am happy to help. Could you send over the key details or the next deadline so I can move it forward properly?\n\nBest,\n[Your name]";
+      }
+
+      if (containsAny(message, ["study", "learn", "exam", "tips"])) {
+        return "Try this study loop: skim the topic for 10 minutes, write five questions, study until you can answer them without looking, then teach the idea out loud. Short recall sessions beat long rereading sessions.";
+      }
+
+      if (containsAny(message, ["summarize", "summary"])) {
+        return "Send me the text you want summarized. I will condense it into the main point, key details, and a practical next step.";
+      }
+
+      if (containsAny(message, ["thanks", "thank you"])) {
+        return "You are welcome. Send the next thing and I will keep going with you.";
+      }
+
+      if (message.endsWith("?")) {
+        return "Good question. My best quick answer: break it into the goal, the constraint, and the next action. If you give me one more detail, I can make the answer much more specific.";
+      }
+
+      const lead = extractTopic(text);
+      return `I hear you on "${lead}". A useful way to move forward is to define the result you want, list what you already have, then choose the smallest useful next action. Tell me the goal and I can help shape it.`;
+    }
+
+    function extractTopic(text) {
+      const cleaned = text.replace(/\s+/g, " ").trim();
+      return cleaned.length > 46 ? `${cleaned.slice(0, 46)}...` : cleaned;
+    }
+
+    function containsAny(text, words) {
+      return words.some(word => text.includes(word));
+    }
+
+    function saveHistory() {
+      localStorage.setItem(storageKey, JSON.stringify(history.slice(-80)));
+    }
+
+    function loadHistory() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey));
+        return Array.isArray(saved) && saved.length ? saved : [...starter];
+      } catch {
+        return [...starter];
+      }
+    }
+
+    function scrollToBottom() {
+      requestAnimationFrame(() => {
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      });
+    }
+  </script>
+</body>
+</html>
