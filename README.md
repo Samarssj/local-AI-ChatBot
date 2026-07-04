@@ -39,4 +39,5 @@ This means the chatbot is private and fast, but it is not connected to a real la
 
 ## Screenshot
 
-![Chatbot screenshot](outputs/chatbot-screenshot.png)
+<img width="1280" height="720" alt="chatbot-screenshot" src="https://github.com/user-attachments/assets/6d8fa383-9d64-4937-9196-3924299694d7" />
+
